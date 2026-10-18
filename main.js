@@ -443,11 +443,41 @@ if (companyName && reportList && watchlistButton && compareForm) {
 }
 
 // =========================================================================
-// Compare page (compare.html)
+// Notes helpers (used by the compare page and the notes page)
 // =========================================================================
 
 // New notes get the next id after the sample notes in data.js
 let nextNoteId = sampleNotes.length + 1;
+
+// Looks up one risk change by its id, e.g. "ACME-3"
+function findChange(changeId) {
+    // Stretch: .find(), same as findCompany above
+    return riskChanges.find(function (change) {
+        return change.id === changeId;
+    });
+}
+
+// Makes the Normal / Important dropdown used by every note form
+function createFlagSelect(id) {
+    const select = document.createElement("select");
+    select.setAttribute("id", id);
+
+    const normalOption = document.createElement("option");
+    normalOption.setAttribute("value", "normal");
+    normalOption.textContent = "Normal";
+    select.appendChild(normalOption);
+
+    const importantOption = document.createElement("option");
+    importantOption.setAttribute("value", "important");
+    importantOption.textContent = "Important";
+    select.appendChild(importantOption);
+
+    return select;
+}
+
+// =========================================================================
+// Compare page (compare.html)
+// =========================================================================
 
 // Turns a status from data.js into the word shown on the page
 function getStatusLabel(status) {
@@ -528,16 +558,7 @@ function createNoteForm(change, notesBox, noteButton) {
     const flagLabel = document.createElement("label");
     flagLabel.setAttribute("for", `note-flag-${change.id}`);
     flagLabel.textContent = "Flag";
-    const flagSelect = document.createElement("select");
-    flagSelect.setAttribute("id", `note-flag-${change.id}`);
-    const normalOption = document.createElement("option");
-    normalOption.setAttribute("value", "normal");
-    normalOption.textContent = "Normal";
-    const importantOption = document.createElement("option");
-    importantOption.setAttribute("value", "important");
-    importantOption.textContent = "Important";
-    flagSelect.appendChild(normalOption);
-    flagSelect.appendChild(importantOption);
+    const flagSelect = createFlagSelect(`note-flag-${change.id}`);
     flagGroup.appendChild(flagLabel);
     flagGroup.appendChild(flagSelect);
     form.appendChild(flagGroup);
@@ -731,5 +752,365 @@ if (changeList && compareTitle && companyPicker && companySelect) {
             button.classList.add("active-filter");
             button.setAttribute("aria-pressed", "true");
         });
+    });
+}
+
+// =========================================================================
+// Watchlist & Notes page (watchlist.html): Watchlist section
+// =========================================================================
+
+const watchlistBody = document.getElementById("watchlist-body");
+const watchlistTable = document.getElementById("watchlist-table");
+const watchlistEmpty = document.getElementById("watchlist-empty");
+const watchlistAddForm = document.getElementById("watchlist-add-form");
+const watchlistAddSelect = document.getElementById("watchlist-add-select");
+const watchlistAddButton = document.getElementById("watchlist-add-btn");
+
+// Builds one table row: company, latest report, change counts, and buttons
+function createWatchlistRow(company) {
+    const counts = countChanges(company.ticker);
+    const latestReport = company.reports[0];
+
+    const row = document.createElement("tr");
+
+    const nameCell = document.createElement("td");
+    const nameLink = document.createElement("a");
+    nameLink.textContent = `${company.name} (${company.ticker})`;
+    nameLink.setAttribute("href", `company.html?ticker=${company.ticker}`);
+    nameCell.appendChild(nameLink);
+    row.appendChild(nameCell);
+
+    const reportCell = document.createElement("td");
+    reportCell.textContent = `${latestReport.year} (filed ${latestReport.filed})`;
+    row.appendChild(reportCell);
+
+    const changesCell = document.createElement("td");
+    const badges = document.createElement("div");
+    badges.classList.add("badges");
+    badges.appendChild(createBadge(`+${counts.newCount} new`, "badge-new"));
+    badges.appendChild(createBadge(`-${counts.removedCount} removed`, "badge-removed"));
+    badges.appendChild(createBadge(`${counts.editedCount} edited`, "badge-edited"));
+    changesCell.appendChild(badges);
+    row.appendChild(changesCell);
+
+    const actionsCell = document.createElement("td");
+    const actions = document.createElement("div");
+    actions.classList.add("table-actions");
+
+    const viewLink = document.createElement("a");
+    viewLink.textContent = "View changes";
+    viewLink.setAttribute("href", `compare.html?ticker=${company.ticker}`);
+    viewLink.classList.add("btn");
+    viewLink.classList.add("btn-secondary");
+    actions.appendChild(viewLink);
+
+    const removeButton = document.createElement("button");
+    removeButton.setAttribute("type", "button");
+    removeButton.classList.add("btn");
+    removeButton.classList.add("btn-danger");
+    removeButton.textContent = "Remove";
+    actions.appendChild(removeButton);
+
+    // Take the ticker out of the array, then redraw the whole table
+    removeButton.addEventListener("click", function () {
+        const position = watchlist.indexOf(company.ticker);
+        watchlist.splice(position, 1);
+        showWatchlist();
+    });
+
+    actionsCell.appendChild(actions);
+    row.appendChild(actionsCell);
+
+    return row;
+}
+
+// Refills the "Add a company" dropdown with companies that are not watched yet.
+// If every company is already watched, the dropdown and button are disabled.
+function fillWatchlistAddSelect() {
+    watchlistAddSelect.textContent = "";
+    let availableCount = 0;
+
+    companies.forEach(function (company) {
+        if (watchlist.indexOf(company.ticker) === -1) {
+            const option = document.createElement("option");
+            option.setAttribute("value", company.ticker);
+            option.textContent = `${company.name} (${company.ticker})`;
+            watchlistAddSelect.appendChild(option);
+            availableCount += 1;
+        }
+    });
+
+    if (availableCount === 0) {
+        const option = document.createElement("option");
+        option.setAttribute("value", "");
+        option.textContent = "All companies are on your watchlist";
+        watchlistAddSelect.appendChild(option);
+        watchlistAddSelect.setAttribute("disabled", "");
+        watchlistAddButton.setAttribute("disabled", "");
+    } else {
+        watchlistAddSelect.removeAttribute("disabled");
+        watchlistAddButton.removeAttribute("disabled");
+    }
+}
+
+// Redraws the table from the watchlist array. Called after every add or
+// remove, so the page always matches the array.
+function showWatchlist() {
+    watchlistBody.textContent = "";
+
+    watchlist.forEach(function (ticker) {
+        const company = findCompany(ticker);
+        if (company) {
+            watchlistBody.appendChild(createWatchlistRow(company));
+        }
+    });
+
+    // Swap the table for a friendly message when nothing is left
+    if (watchlist.length === 0) {
+        watchlistTable.classList.add("hidden");
+        watchlistEmpty.classList.remove("hidden");
+    } else {
+        watchlistTable.classList.remove("hidden");
+        watchlistEmpty.classList.add("hidden");
+    }
+
+    fillWatchlistAddSelect();
+}
+
+if (watchlistBody && watchlistTable && watchlistAddForm) {
+    showWatchlist();
+
+    watchlistAddForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const ticker = watchlistAddSelect.value;
+        if (ticker !== "") {
+            watchlist.push(ticker);
+            showWatchlist();
+        }
+    });
+}
+
+// =========================================================================
+// Watchlist & Notes page (watchlist.html): Notes section
+// =========================================================================
+
+const addNoteForm = document.getElementById("add-note-form");
+const noteChangeSelect = document.getElementById("note-change");
+const noteTextInput = document.getElementById("note-text");
+const noteFlagSelect = document.getElementById("note-flag");
+const noteError = document.getElementById("note-error");
+const notesList = document.getElementById("notes-list");
+const notesSummary = document.getElementById("notes-summary");
+
+// The id of the note being edited right now, or null if none.
+// Only one note can be in edit mode at a time.
+let editingNoteId = null;
+
+// Builds the small form that replaces a note's text while editing it
+function createNoteEditForm(note) {
+    const form = document.createElement("form");
+    form.classList.add("note-edit-form");
+    form.setAttribute("novalidate", "");
+
+    const textGroup = document.createElement("div");
+    textGroup.classList.add("form-group");
+    const textLabel = document.createElement("label");
+    textLabel.setAttribute("for", `edit-text-${note.id}`);
+    textLabel.textContent = "Edit note";
+    const textArea = document.createElement("textarea");
+    textArea.setAttribute("id", `edit-text-${note.id}`);
+    textArea.setAttribute("rows", "3");
+    textArea.value = note.text;
+    textGroup.appendChild(textLabel);
+    textGroup.appendChild(textArea);
+    form.appendChild(textGroup);
+
+    const flagGroup = document.createElement("div");
+    flagGroup.classList.add("form-group");
+    const flagLabel = document.createElement("label");
+    flagLabel.setAttribute("for", `edit-flag-${note.id}`);
+    flagLabel.textContent = "Flag";
+    const flagSelect = createFlagSelect(`edit-flag-${note.id}`);
+    if (note.important) {
+        flagSelect.value = "important";
+    }
+    flagGroup.appendChild(flagLabel);
+    flagGroup.appendChild(flagSelect);
+    form.appendChild(flagGroup);
+
+    const actions = document.createElement("div");
+    actions.classList.add("note-actions");
+
+    const saveButton = document.createElement("button");
+    saveButton.setAttribute("type", "submit");
+    saveButton.classList.add("btn");
+    saveButton.classList.add("btn-primary");
+    saveButton.textContent = "Save";
+    actions.appendChild(saveButton);
+
+    const cancelButton = document.createElement("button");
+    cancelButton.setAttribute("type", "button");
+    cancelButton.classList.add("btn");
+    cancelButton.classList.add("btn-secondary");
+    cancelButton.textContent = "Cancel";
+    actions.appendChild(cancelButton);
+
+    form.appendChild(actions);
+
+    const errorText = document.createElement("p");
+    errorText.classList.add("error-message");
+    form.appendChild(errorText);
+
+    // Save: update the note object itself, then leave edit mode
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const newText = textArea.value.trim();
+        if (newText === "") {
+            errorText.textContent = "A note can't be empty. Use Delete to remove it instead.";
+            return;
+        }
+
+        note.text = newText;
+        note.important = flagSelect.value === "important";
+        editingNoteId = null;
+        showNotes();
+    });
+
+    // Cancel: leave edit mode without changing anything
+    cancelButton.addEventListener("click", function () {
+        editingNoteId = null;
+        showNotes();
+    });
+
+    return form;
+}
+
+// Builds one note card: which change it is about, the note, and buttons.
+// If this note is being edited, the edit form shows instead of the text.
+function createNoteCard(note) {
+    const change = findChange(note.changeId);
+
+    const card = document.createElement("article");
+    card.classList.add("note-card");
+
+    const header = document.createElement("div");
+    header.classList.add("note-card-header");
+    header.appendChild(createBadge(getStatusLabel(change.status), `badge-${change.status}`));
+
+    const title = document.createElement("h3");
+    title.textContent = `${change.ticker}: ${change.title}`;
+    header.appendChild(title);
+
+    if (note.important) {
+        header.appendChild(createBadge("Important", "badge-important"));
+    }
+    card.appendChild(header);
+
+    if (note.id === editingNoteId) {
+        card.appendChild(createNoteEditForm(note));
+        return card;
+    }
+
+    const text = document.createElement("p");
+    text.textContent = note.text;
+    card.appendChild(text);
+
+    const actions = document.createElement("div");
+    actions.classList.add("note-actions");
+
+    const viewLink = document.createElement("a");
+    viewLink.textContent = "View change";
+    viewLink.setAttribute("href", `compare.html?ticker=${change.ticker}`);
+    viewLink.classList.add("btn");
+    viewLink.classList.add("btn-secondary");
+    actions.appendChild(viewLink);
+
+    const editButton = document.createElement("button");
+    editButton.setAttribute("type", "button");
+    editButton.classList.add("btn");
+    editButton.classList.add("btn-secondary");
+    editButton.textContent = "Edit";
+    actions.appendChild(editButton);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.setAttribute("type", "button");
+    deleteButton.classList.add("btn");
+    deleteButton.classList.add("btn-danger");
+    deleteButton.textContent = "Delete";
+    actions.appendChild(deleteButton);
+
+    card.appendChild(actions);
+
+    editButton.addEventListener("click", function () {
+        editingNoteId = note.id;
+        showNotes();
+    });
+
+    // indexOf finds this exact note object in the array so splice can remove it
+    deleteButton.addEventListener("click", function () {
+        const position = sampleNotes.indexOf(note);
+        sampleNotes.splice(position, 1);
+        showNotes();
+    });
+
+    return card;
+}
+
+// Redraws every note card from the sampleNotes array, plus the count line.
+// Same idea as showWatchlist: change the array, then redraw.
+function showNotes() {
+    notesList.textContent = "";
+    let importantCount = 0;
+
+    sampleNotes.forEach(function (note) {
+        notesList.appendChild(createNoteCard(note));
+        if (note.important) {
+            importantCount += 1;
+        }
+    });
+
+    if (sampleNotes.length === 0) {
+        notesSummary.textContent = "No notes yet. Add one above, or with \"+ Note\" on the Compare page.";
+    } else {
+        notesSummary.textContent = `${sampleNotes.length} note(s) · ${importantCount} marked important`;
+    }
+}
+
+if (addNoteForm && notesList && notesSummary) {
+    // Fill "Which change?" with every new, removed, or edited risk.
+    // Unchanged paragraphs are skipped since there is nothing to note.
+    riskChanges.forEach(function (change) {
+        if (change.status !== "unchanged") {
+            const option = document.createElement("option");
+            option.setAttribute("value", change.id);
+            option.textContent = `${change.ticker}: ${change.title} (${getStatusLabel(change.status)})`;
+            noteChangeSelect.appendChild(option);
+        }
+    });
+
+    showNotes();
+
+    addNoteForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const noteText = noteTextInput.value.trim();
+        if (noteText === "") {
+            noteError.textContent = "Please write a note before saving.";
+            return;
+        }
+
+        sampleNotes.push({
+            id: nextNoteId,
+            changeId: noteChangeSelect.value,
+            text: noteText,
+            important: noteFlagSelect.value === "important"
+        });
+        nextNoteId += 1;
+
+        noteError.textContent = "";
+        addNoteForm.reset();
+        showNotes();
     });
 }

@@ -212,6 +212,16 @@ ul {
     background-color: #cfd7e2;
 }
 
+/* Red button for actions that take something away (Remove, Delete) */
+.btn-danger {
+    background-color: #fbe3e3;
+    color: #a12622;
+}
+
+.btn-danger:hover {
+    background-color: #f5c6c6;
+}
+
 /* -------------------------------------------------------------------------
    Company cards (home page)
    ------------------------------------------------------------------------- */
@@ -298,6 +308,11 @@ ul {
 
 .compare-panel {
     flex: 1;
+}
+
+/* Shared look for the boxed forms (compare panel, add-note form) */
+.compare-panel,
+.form-panel {
     background-color: #e9eef4;
     border: 1px solid #d6dde6;
     border-radius: 6px;
@@ -384,6 +399,9 @@ ul {
     border: 1px solid #c0c0c0;
     border-radius: 4px;
     background-color: white;
+    /* A dropdown is as wide as its longest option by default; this keeps
+       long options (like change titles) from pushing past the screen edge */
+    max-width: 100%;
 }
 
 .form-group input:focus,
@@ -613,6 +631,94 @@ ul {
 }
 
 /* -------------------------------------------------------------------------
+   Watchlist & Notes page (watchlist.html)
+   ------------------------------------------------------------------------- */
+/* Only the table scrolls sideways if it is too wide, not the whole page */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.watchlist-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border: 1px solid #d6dde6;
+}
+
+.watchlist-table th,
+.watchlist-table td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e8ef;
+}
+
+.watchlist-table th {
+    background-color: #e9eef4;
+    color: #1d3557;
+    font-size: 14px;
+}
+
+/* The badges already have a bottom margin for cards; not needed in a cell */
+.watchlist-table .badges {
+    margin-bottom: 0;
+}
+
+.table-actions,
+.note-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-actions .btn,
+.note-actions .btn {
+    padding: 6px 14px;
+    font-size: 14px;
+}
+
+.empty-message {
+    font-style: italic;
+    color: #5c6b7a;
+}
+
+.form-panel {
+    max-width: 600px;
+    margin-bottom: 30px;
+}
+
+.form-panel h3 {
+    margin-bottom: 12px;
+}
+
+.note-card {
+    background-color: white;
+    border: 1px solid #d6dde6;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+}
+
+/* Status badge, then the title (which takes the extra space), then Important */
+.note-card-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.note-card-header h3 {
+    flex: 1;
+    font-size: 16px;
+}
+
+.note-edit-form {
+    max-width: 600px;
+}
+
+/* -------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------- */
 .site-footer {
@@ -680,5 +786,12 @@ ul {
 
     .change-header {
         flex-wrap: wrap;
+    }
+
+    /* Tighter table cells so all four columns fit on a phone */
+    .watchlist-table th,
+    .watchlist-table td {
+        padding: 8px;
+        font-size: 14px;
     }
 }

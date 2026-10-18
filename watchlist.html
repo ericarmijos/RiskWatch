@@ -42,12 +42,70 @@
     <main>
         <section class="section" id="watchlist">
             <h2>Watchlist</h2>
-            <p>Coming in Step 7: watchlist table with Remove buttons.</p>
+            <p class="card-meta">Prototype: changes on this page are kept in memory only and reset when the page reloads.</p>
+
+            <!-- main.js fills the dropdown with companies not already on the watchlist -->
+            <form class="picker-form" id="watchlist-add-form" novalidate>
+                <div class="form-group">
+                    <label for="watchlist-add-select">Add a company</label>
+                    <select id="watchlist-add-select" name="ticker"></select>
+                </div>
+                <button type="submit" class="btn btn-primary" id="watchlist-add-btn">Add to Watchlist</button>
+            </form>
+
+            <p class="empty-message hidden" id="watchlist-empty">Your watchlist is empty. Add a company above or from its company page.</p>
+
+            <!-- A table fits here because every company has the same columns.
+                 main.js adds one row per ticker in the watchlist array. -->
+            <!-- The wrapper lets the table scroll sideways on a phone
+                 instead of making the whole page wider than the screen -->
+            <div class="table-wrapper">
+                <table class="watchlist-table" id="watchlist-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Latest report</th>
+                            <th>Changes since previous year</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="watchlist-body"></tbody>
+                </table>
+            </div>
         </section>
 
         <section class="section" id="notes">
             <h2>Notes</h2>
-            <p>Coming in Step 7: add, edit, and delete notes.</p>
+
+            <form class="form-panel" id="add-note-form" novalidate>
+                <h3>Add a note</h3>
+
+                <div class="form-group">
+                    <label for="note-change">Which change?</label>
+                    <!-- main.js adds one option per new, removed, or edited risk -->
+                    <select id="note-change" name="change"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="note-text">Your note</label>
+                    <textarea id="note-text" name="text" rows="3" placeholder="Why does this change matter?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="note-flag">Flag</label>
+                    <select id="note-flag" name="flag">
+                        <option value="normal">Normal</option>
+                        <option value="important">Important</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save note</button>
+                <p class="error-message" id="note-error"></p>
+            </form>
+
+            <!-- main.js fills in the count and one card per note -->
+            <p class="card-meta" id="notes-summary"></p>
+            <div id="notes-list"></div>
         </section>
     </main>
 
