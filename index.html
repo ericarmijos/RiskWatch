@@ -40,12 +40,25 @@
     <section class="page-header">
         <h1>See what changed in a company's risks</h1>
         <p class="tagline">Search any public company by name or ticker</p>
+
+        <!-- action="search.html" sends the user to the search page with what
+             they typed in the address bar (search.html?q=acme). The browser
+             does this on its own, so no JavaScript is needed for this form. -->
+        <form class="search-form" action="search.html">
+            <label for="home-search">Company name or ticker</label>
+            <div class="search-row">
+                <input type="text" id="home-search" name="q" placeholder='e.g. "Acme Corp" or "ACME"'>
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </div>
+        </form>
     </section>
 
     <main>
         <section class="section" id="recent">
             <h2>Recently filed reports with the most changes</h2>
-            <p>Coming in Step 3: search form and company cards.</p>
+
+            <!-- Empty on purpose: main.js builds one card per company from data.js -->
+            <div class="card-row" id="recent-cards"></div>
         </section>
     </main>
 
