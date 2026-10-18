@@ -58,8 +58,6 @@ All data lives in `data.js`:
 
 ## Screenshots
 
-<!-- TODO: take 2–4 screenshots, save them in screenshots/, and check the file names below -->
-
 ### Home page
 ![Home page with search form and recently changed company cards](screenshots/home.png)
 
@@ -90,7 +88,7 @@ screenshots/     Images used in this README
 
 **Tool used:** Claude Code (Anthropic's Claude Opus 5.5), with AI tools allowed under the course policy.
 
-**What it generated:** We gave it our project proposal, the Milestone 2 instructions, the lecture slides, and Eric's portfolio as a style reference. It then generated the page shells, `style.css`, `data.js` (including the fictional companies and risk text), and `main.js`, one step at a time. We told it to stay within what we have learned in class, plus three small extras: the `input` event, `URLSearchParams`, and `.find()`. It also drafted this README.
+**What it generated:** We gave it our project proposal, the Milestone 2 instructions, the lecture slides, and Eric's portfolio as a style reference. It then generated the page shells, `style.css`, `data.js` (including the fictional companies and risk text), and `main.js`, one step at a time. We told it to stay within what we have learned in class, plus three small extras: the `input` event, `URLSearchParams`, and `.find()`. It also did a visual polish pass on the CSS (white navbar, system font, rounded cards), took the screenshots in this README with headless Chrome, and drafted this README.
 
 **What we changed:**
 <!-- TODO (Eric/Cody): list what you changed, rewrote, or decided yourselves, e.g. layout tweaks, wording, colors, data -->
