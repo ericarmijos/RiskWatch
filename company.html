@@ -34,16 +34,42 @@
         </nav>
     </header>
 
+    <!-- main.js fills in the company name and details using ?ticker= from the address -->
     <section class="page-header">
-        <h1>Company</h1>
-        <p class="tagline">Annual reports (10-K) by year</p>
+        <h1 id="company-name">Company</h1>
+        <p class="tagline" id="company-meta">Annual reports (10-K) by year</p>
+        <button type="button" class="btn btn-secondary" id="watchlist-btn">+ Add to Watchlist</button>
+        <p class="watchlist-message" id="watchlist-message"></p>
     </section>
 
     <main>
-        <section class="section" id="reports">
-            <h2>Annual reports (10-K)</h2>
-            <p>Coming in Step 5: reports by year, show/hide risks, Add to Watchlist, and the compare form.</p>
-        </section>
+        <!-- Two columns: report list on the left, compare form on the right -->
+        <div class="section company-layout" id="company-layout">
+            <section class="report-column" id="reports">
+                <h2>Annual reports (10-K)</h2>
+                <!-- main.js adds one row per report, newest first -->
+                <ul class="report-list" id="report-list"></ul>
+            </section>
+
+            <section class="compare-panel" id="compare-panel">
+                <h2>Compare two years</h2>
+                <!-- The year options come from data.js, so main.js adds them -->
+                <form id="compare-form" novalidate>
+                    <div class="form-group">
+                        <label for="newer-year">Newer report</label>
+                        <select id="newer-year" name="newer"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="older-year">Older report</label>
+                        <select id="older-year" name="older"></select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Compare</button>
+                    <p class="error-message" id="compare-error"></p>
+                </form>
+            </section>
+        </div>
     </main>
 
     <footer class="site-footer">

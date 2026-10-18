@@ -50,6 +50,15 @@ function countChanges(ticker) {
     return counts;
 }
 
+// Looks up one company object by its ticker, e.g. "ACME".
+// Returns undefined if no company has that ticker.
+function findCompany(ticker) {
+    // Stretch: .find() returns the first item where the function returns true
+    return companies.find(function (company) {
+        return company.ticker === ticker;
+    });
+}
+
 // Makes one small colored label like "+3 new".
 // The CSS class decides the color (green, red, or yellow).
 function createBadge(text, className) {
@@ -213,4 +222,220 @@ if (searchForm && searchInput && searchResults && resultCount) {
         event.preventDefault();
         showSearchResults(searchInput.value);
     });
+}
+
+// =========================================================================
+// Company page (company.html)
+// =========================================================================
+
+// Builds the list of risk paragraphs in one year's report.
+// The prototype only stores text for the newest pair of years:
+//   newest year   = every paragraph that was not removed (uses newText)
+//   previous year = every paragraph that was not new     (uses oldText)
+// Older years return an empty array.
+function getRisksForYear(ticker, year) {
+    const risks = [];
+
+    for (const change of riskChanges) {
+        if (change.ticker === ticker) {
+            if (year === newestYear && change.status !== "removed") {
+                risks.push({ title: change.title, text: change.newText });
+            } else if (year === previousYear && change.status !== "new") {
+                risks.push({ title: change.title, text: change.oldText });
+            }
+        }
+    }
+
+    return risks;
+}
+
+// Builds one report row with a "Read risks" button that shows or hides
+// that year's risk paragraphs underneath it
+function createReportItem(ticker, report) {
+    const item = document.createElement("li");
+    item.classList.add("report-item");
+
+    const row = document.createElement("div");
+    row.classList.add("report-row");
+
+    const info = document.createElement("div");
+    const heading = document.createElement("h3");
+    heading.textContent = `${report.year} Annual Report`;
+    info.appendChild(heading);
+
+    const details = document.createElement("p");
+    details.classList.add("card-meta");
+    details.textContent = `Filed ${report.filed} · Risk Factors: ${report.paragraphs} paragraphs`;
+    info.appendChild(details);
+    row.appendChild(info);
+
+    const toggleButton = document.createElement("button");
+    toggleButton.setAttribute("type", "button");
+    toggleButton.setAttribute("aria-expanded", "false");
+    toggleButton.classList.add("btn");
+    toggleButton.classList.add("btn-secondary");
+    toggleButton.textContent = "Read risks";
+    row.appendChild(toggleButton);
+
+    item.appendChild(row);
+
+    // The paragraphs start hidden; the "hidden" class sets display: none
+    const riskList = document.createElement("div");
+    riskList.classList.add("risk-list");
+    riskList.classList.add("hidden");
+
+    const risks = getRisksForYear(ticker, report.year);
+
+    if (risks.length === 0) {
+        const message = document.createElement("p");
+        message.textContent = `Sample risk text is only included for ${newestYear} and ${previousYear} in this prototype.`;
+        riskList.appendChild(message);
+    } else {
+        risks.forEach(function (risk) {
+            const paragraph = document.createElement("div");
+            paragraph.classList.add("risk-paragraph");
+
+            const title = document.createElement("h4");
+            title.textContent = risk.title;
+            paragraph.appendChild(title);
+
+            const text = document.createElement("p");
+            text.textContent = risk.text;
+            paragraph.appendChild(text);
+
+            riskList.appendChild(paragraph);
+        });
+    }
+
+    item.appendChild(riskList);
+
+    // Same toggle idea as the hamburger menu: flip a class, then update
+    // the button text and aria-expanded to match
+    toggleButton.addEventListener("click", function () {
+        riskList.classList.toggle("hidden");
+
+        if (riskList.classList.contains("hidden")) {
+            toggleButton.textContent = "Read risks";
+            toggleButton.setAttribute("aria-expanded", "false");
+        } else {
+            toggleButton.textContent = "Hide risks";
+            toggleButton.setAttribute("aria-expanded", "true");
+        }
+    });
+
+    return item;
+}
+
+const companyName = document.getElementById("company-name");
+const companyMeta = document.getElementById("company-meta");
+const companyLayout = document.getElementById("company-layout");
+const reportList = document.getElementById("report-list");
+const watchlistButton = document.getElementById("watchlist-btn");
+const watchlistMessage = document.getElementById("watchlist-message");
+const compareForm = document.getElementById("compare-form");
+const newerSelect = document.getElementById("newer-year");
+const olderSelect = document.getElementById("older-year");
+const compareError = document.getElementById("compare-error");
+
+// Shows the right button text depending on whether the company is
+// already in the watchlist array from data.js
+function updateWatchlistButton(ticker) {
+    if (watchlist.indexOf(ticker) === -1) {
+        watchlistButton.textContent = "+ Add to Watchlist";
+    } else {
+        watchlistButton.textContent = "✓ On Watchlist";
+    }
+}
+
+// Adds one <option> per report year to a dropdown
+function fillYearSelect(select, reports) {
+    reports.forEach(function (report) {
+        const option = document.createElement("option");
+        option.setAttribute("value", report.year);
+        option.textContent = report.year;
+        select.appendChild(option);
+    });
+}
+
+// Fills the page with one company's details, reports, and forms
+function showCompanyPage(company) {
+    companyName.textContent = `${company.name} (${company.ticker})`;
+    companyMeta.textContent = `Industry: ${company.industry} | Annual reports on file: ${company.reports.length}`;
+    document.title = `RiskWatch | ${company.name}`;
+
+    company.reports.forEach(function (report) {
+        reportList.appendChild(createReportItem(company.ticker, report));
+    });
+
+    // ----- Add to / remove from watchlist -----
+    // Changes the watchlist array in memory only, so it resets when the
+    // user leaves the page (no database until a later milestone)
+    updateWatchlistButton(company.ticker);
+
+    watchlistButton.addEventListener("click", function () {
+        const position = watchlist.indexOf(company.ticker);
+
+        if (position === -1) {
+            watchlist.push(company.ticker);
+            watchlistMessage.textContent = `Added ${company.ticker} to your watchlist. (Prototype: this resets when you leave the page.)`;
+        } else {
+            watchlist.splice(position, 1);
+            watchlistMessage.textContent = `Removed ${company.ticker} from your watchlist.`;
+        }
+
+        updateWatchlistButton(company.ticker);
+    });
+
+    // ----- Compare form -----
+    // Default to the two newest reports, since that pair has sample changes
+    fillYearSelect(newerSelect, company.reports);
+    fillYearSelect(olderSelect, company.reports);
+    newerSelect.value = company.reports[0].year;
+    olderSelect.value = company.reports[1].year;
+
+    compareForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        // A dropdown's value is always a string, so turn it into a number
+        // before comparing years
+        const newer = Number(newerSelect.value);
+        const older = Number(olderSelect.value);
+
+        if (newer <= older) {
+            compareError.textContent = "The newer report must be a later year than the older report.";
+        } else if (newer !== newestYear || older !== previousYear) {
+            compareError.textContent = `This prototype only has sample changes for ${newestYear} vs ${previousYear}.`;
+        } else {
+            compareError.textContent = "";
+            // Go to the compare page for this company
+            window.location.href = `compare.html?ticker=${company.ticker}`;
+        }
+    });
+}
+
+// Shown when the address has no ticker, or one that is not in data.js
+function showCompanyNotFound() {
+    companyName.textContent = "Company not found";
+    companyMeta.textContent = "Try searching for ACME, NWND, or BLPK.";
+    watchlistButton.classList.add("hidden");
+
+    const searchLink = document.createElement("a");
+    searchLink.textContent = "Go to Search";
+    searchLink.setAttribute("href", "search.html");
+    searchLink.classList.add("btn");
+    searchLink.classList.add("btn-secondary");
+    watchlistMessage.appendChild(searchLink);
+
+    companyLayout.classList.add("hidden");
+}
+
+if (companyName && reportList && watchlistButton && compareForm) {
+    const params = new URLSearchParams(window.location.search);
+    const company = findCompany(params.get("ticker"));
+
+    if (company) {
+        showCompanyPage(company);
+    } else {
+        showCompanyNotFound();
+    }
 }
