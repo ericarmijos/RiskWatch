@@ -90,9 +90,11 @@ screenshots/     Images used in this README
 
 **What it generated:** We gave it our project proposal, the Milestone 2 instructions, the lecture slides, and Eric's portfolio as a style reference. It then generated the page shells, `style.css`, `data.js` (including the fictional companies and risk text), and `main.js`, one step at a time. We told it to stay within what we have learned in class, plus three small extras: the `input` event, `URLSearchParams`, and `.find()`. It also did a visual polish pass on the CSS (white navbar, system font, rounded cards), took the screenshots in this README with headless Chrome, and drafted this README.
 
-**What we changed:**
-<!-- TODO (Eric/Cody): list what you changed, rewrote, or decided yourselves, e.g. layout tweaks, wording, colors, data -->
-- _To be filled in by the team._
+**What we decided and directed:**
+- The project idea, features, user flow, and wireframes all come from our Milestone 1 proposal.
+- We wrote the rules the AI had to follow: use fictional companies instead of real ones, use only concepts from our lectures, build one shared `style.css` and `main.js`, and leave the text-comparison logic for us to write ourselves later.
+- We had it build one step at a time and checked each step before approving the next one.
+- After seeing the first version, we asked for a more modern design and approved the new navbar and card styles.
 
 **How we tested:**
 - Tested each step in VS Code Live Server before moving on: clicked every nav link, the hamburger menu, search, show/hide risks, the compare form and its error messages, filters, and add / edit / delete for notes and the watchlist.
