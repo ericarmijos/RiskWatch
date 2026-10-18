@@ -100,6 +100,5 @@ screenshots/     Images used in this README
 - Tested each step in VS Code Live Server before moving on: clicked every nav link, the hamburger menu, search, show/hide risks, the compare form and its error messages, filters, and add / edit / delete for notes and the watchlist.
 - Checked the layout at phone width with Chrome DevTools device mode.
 - Checked the Chrome DevTools Console for errors on every page.
-<!-- TODO (Eric/Cody): adjust this list to match what you actually tested -->
 
 We can explain every line of code and every design decision in this project.
