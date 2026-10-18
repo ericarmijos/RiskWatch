@@ -35,13 +35,47 @@
 
     <section class="page-header">
         <h1>Compare Two Years</h1>
-        <p class="tagline">New, removed, and reworded risks side by side</p>
+        <!-- main.js fills in the company name and years -->
+        <p class="tagline" id="compare-title">New, removed, and reworded risks side by side</p>
     </section>
 
     <main>
+        <section class="section" id="summary">
+            <!-- Lets the user switch companies, and gives the Compare nav link
+                 (which has no ?ticker=) a way to pick one -->
+            <form class="picker-form" id="company-picker" novalidate>
+                <div class="form-group">
+                    <label for="company-select">Company</label>
+                    <select id="company-select" name="ticker"></select>
+                </div>
+                <button type="submit" class="btn btn-secondary">Show changes</button>
+            </form>
+
+            <h2>Summary</h2>
+            <!-- main.js puts the real counts in each number span -->
+            <div class="summary-row">
+                <p class="summary-box badge-new"><span class="summary-number" id="count-new">0</span> New</p>
+                <p class="summary-box badge-removed"><span class="summary-number" id="count-removed">0</span> Removed</p>
+                <p class="summary-box badge-edited"><span class="summary-number" id="count-edited">0</span> Edited</p>
+                <p class="summary-box badge-unchanged"><span class="summary-number" id="count-unchanged">0</span> Unchanged</p>
+            </div>
+
+            <!-- Filter buttons: main.js hides every row that does not match.
+                 aria-pressed tells screen readers which filter is on. -->
+            <div class="filter-row">
+                <span class="filter-label">Show:</span>
+                <button type="button" class="filter-btn active-filter" id="filter-all" aria-pressed="true">All</button>
+                <button type="button" class="filter-btn" id="filter-new" aria-pressed="false">New</button>
+                <button type="button" class="filter-btn" id="filter-removed" aria-pressed="false">Removed</button>
+                <button type="button" class="filter-btn" id="filter-edited" aria-pressed="false">Edited</button>
+            </div>
+        </section>
+
         <section class="section" id="changes">
             <h2>Changes</h2>
-            <p>Coming in Step 6: color-coded changes, summary counts, filter buttons, and the note form.</p>
+            <p class="card-meta">Click "+ Note" on any change to add a note. Notes are kept in memory only, so they reset when you leave this page.</p>
+            <!-- main.js adds one color-coded row per risk paragraph -->
+            <div id="change-list"></div>
         </section>
     </main>
 

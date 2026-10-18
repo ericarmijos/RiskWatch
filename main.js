@@ -30,10 +30,10 @@ if (yearSpan) {
 // Shared helpers (used by more than one page)
 // =========================================================================
 
-// Counts how many risks were new, removed, and edited for one company.
-// Several pages show these numbers, so the counting lives in one place.
+// Counts how many risks were new, removed, edited, and unchanged for one
+// company. Several pages show these numbers, so the counting lives in one place.
 function countChanges(ticker) {
-    const counts = { newCount: 0, removedCount: 0, editedCount: 0 };
+    const counts = { newCount: 0, removedCount: 0, editedCount: 0, unchangedCount: 0 };
 
     for (const change of riskChanges) {
         if (change.ticker === ticker) {
@@ -43,6 +43,8 @@ function countChanges(ticker) {
                 counts.removedCount += 1;
             } else if (change.status === "edited") {
                 counts.editedCount += 1;
+            } else {
+                counts.unchangedCount += 1;
             }
         }
     }
@@ -438,4 +440,296 @@ if (companyName && reportList && watchlistButton && compareForm) {
     } else {
         showCompanyNotFound();
     }
+}
+
+// =========================================================================
+// Compare page (compare.html)
+// =========================================================================
+
+// New notes get the next id after the sample notes in data.js
+let nextNoteId = sampleNotes.length + 1;
+
+// Turns a status from data.js into the word shown on the page
+function getStatusLabel(status) {
+    if (status === "new") {
+        return "New";
+    } else if (status === "removed") {
+        return "Removed";
+    } else if (status === "edited") {
+        return "Edited";
+    } else {
+        return "Unchanged";
+    }
+}
+
+// Builds one saved note: its text, plus an "Important" label if flagged
+function createNoteItem(note) {
+    const item = document.createElement("div");
+    item.classList.add("note-item");
+
+    if (note.important) {
+        item.appendChild(createBadge("Important", "badge-important"));
+    }
+
+    const text = document.createElement("p");
+    text.textContent = note.text;
+    item.appendChild(text);
+
+    return item;
+}
+
+// Builds one side of a change row (the older or the newer report).
+// An empty string means the paragraph is not in that year's report.
+function createChangeSide(label, text) {
+    const side = document.createElement("div");
+    side.classList.add("change-side");
+
+    const sideLabel = document.createElement("p");
+    sideLabel.classList.add("side-label");
+    sideLabel.textContent = label;
+    side.appendChild(sideLabel);
+
+    const paragraph = document.createElement("p");
+    if (text === "") {
+        paragraph.textContent = "Not in this report.";
+        paragraph.classList.add("empty-side");
+    } else {
+        paragraph.textContent = text;
+    }
+    side.appendChild(paragraph);
+
+    return side;
+}
+
+// Builds the hidden "+ Note" form for one change. When saved, the note is
+// added to the sampleNotes array (in memory only) and shown under the change.
+function createNoteForm(change, notesBox, noteButton) {
+    const form = document.createElement("form");
+    form.classList.add("note-form");
+    form.classList.add("hidden");
+    form.setAttribute("novalidate", "");
+
+    // Each label needs a unique id to point at, so the change id is used
+    const textGroup = document.createElement("div");
+    textGroup.classList.add("form-group");
+    const textLabel = document.createElement("label");
+    textLabel.setAttribute("for", `note-text-${change.id}`);
+    textLabel.textContent = "Your note";
+    const textArea = document.createElement("textarea");
+    textArea.setAttribute("id", `note-text-${change.id}`);
+    textArea.setAttribute("rows", "3");
+    textArea.setAttribute("placeholder", "Why does this change matter?");
+    textGroup.appendChild(textLabel);
+    textGroup.appendChild(textArea);
+    form.appendChild(textGroup);
+
+    const flagGroup = document.createElement("div");
+    flagGroup.classList.add("form-group");
+    const flagLabel = document.createElement("label");
+    flagLabel.setAttribute("for", `note-flag-${change.id}`);
+    flagLabel.textContent = "Flag";
+    const flagSelect = document.createElement("select");
+    flagSelect.setAttribute("id", `note-flag-${change.id}`);
+    const normalOption = document.createElement("option");
+    normalOption.setAttribute("value", "normal");
+    normalOption.textContent = "Normal";
+    const importantOption = document.createElement("option");
+    importantOption.setAttribute("value", "important");
+    importantOption.textContent = "Important";
+    flagSelect.appendChild(normalOption);
+    flagSelect.appendChild(importantOption);
+    flagGroup.appendChild(flagLabel);
+    flagGroup.appendChild(flagSelect);
+    form.appendChild(flagGroup);
+
+    const saveButton = document.createElement("button");
+    saveButton.setAttribute("type", "submit");
+    saveButton.classList.add("btn");
+    saveButton.classList.add("btn-primary");
+    saveButton.textContent = "Save note";
+    form.appendChild(saveButton);
+
+    const errorText = document.createElement("p");
+    errorText.classList.add("error-message");
+    form.appendChild(errorText);
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const noteText = textArea.value.trim();
+
+        if (noteText === "") {
+            errorText.textContent = "Please write a note before saving.";
+            return;
+        }
+
+        const note = {
+            id: nextNoteId,
+            changeId: change.id,
+            text: noteText,
+            important: flagSelect.value === "important"
+        };
+        nextNoteId += 1;
+        sampleNotes.push(note);
+
+        notesBox.appendChild(createNoteItem(note));
+
+        // Clear and close the form so it is ready for the next note
+        errorText.textContent = "";
+        form.reset();
+        form.classList.add("hidden");
+        noteButton.textContent = "+ Note";
+        noteButton.setAttribute("aria-expanded", "false");
+    });
+
+    return form;
+}
+
+// Builds one color-coded change row: label, title, both years side by
+// side, any saved notes, and the "+ Note" button and form.
+// The status class (e.g. "change-new") sets the color and is also what the
+// filter buttons look for.
+function createChangeRow(change) {
+    const row = document.createElement("article");
+    row.classList.add("change-row");
+    row.classList.add(`change-${change.status}`);
+
+    const header = document.createElement("div");
+    header.classList.add("change-header");
+    header.appendChild(createBadge(getStatusLabel(change.status), `badge-${change.status}`));
+
+    const title = document.createElement("h3");
+    title.textContent = change.title;
+    header.appendChild(title);
+
+    const noteButton = document.createElement("button");
+    noteButton.setAttribute("type", "button");
+    noteButton.setAttribute("aria-expanded", "false");
+    noteButton.classList.add("btn");
+    noteButton.classList.add("btn-secondary");
+    noteButton.classList.add("note-btn");
+    noteButton.textContent = "+ Note";
+    header.appendChild(noteButton);
+
+    row.appendChild(header);
+
+    const sides = document.createElement("div");
+    sides.classList.add("change-sides");
+    sides.appendChild(createChangeSide(`${previousYear} report (older)`, change.oldText));
+    sides.appendChild(createChangeSide(`${newestYear} report (newer)`, change.newText));
+    row.appendChild(sides);
+
+    // Show notes that already exist for this change (from data.js)
+    const notesBox = document.createElement("div");
+    notesBox.classList.add("change-notes");
+    sampleNotes.forEach(function (note) {
+        if (note.changeId === change.id) {
+            notesBox.appendChild(createNoteItem(note));
+        }
+    });
+    row.appendChild(notesBox);
+
+    const noteForm = createNoteForm(change, notesBox, noteButton);
+    row.appendChild(noteForm);
+
+    // "+ Note" opens and closes this row's form
+    noteButton.addEventListener("click", function () {
+        noteForm.classList.toggle("hidden");
+
+        if (noteForm.classList.contains("hidden")) {
+            noteButton.textContent = "+ Note";
+            noteButton.setAttribute("aria-expanded", "false");
+        } else {
+            noteButton.textContent = "Close";
+            noteButton.setAttribute("aria-expanded", "true");
+        }
+    });
+
+    return row;
+}
+
+const changeList = document.getElementById("change-list");
+const compareTitle = document.getElementById("compare-title");
+const companyPicker = document.getElementById("company-picker");
+const companySelect = document.getElementById("company-select");
+
+// Shows only rows whose status matches the clicked filter ("all" shows every row)
+function applyFilter(status) {
+    const rows = document.querySelectorAll(".change-row");
+
+    rows.forEach(function (row) {
+        if (status === "all" || row.classList.contains(`change-${status}`)) {
+            row.classList.remove("hidden");
+        } else {
+            row.classList.add("hidden");
+        }
+    });
+}
+
+if (changeList && compareTitle && companyPicker && companySelect) {
+    // Use ?ticker= from the address; if it is missing (e.g. the Compare nav
+    // link) or unknown, fall back to the first company so the page is never empty
+    const params = new URLSearchParams(window.location.search);
+    let company = findCompany(params.get("ticker"));
+
+    if (!company) {
+        company = companies[0];
+    }
+
+    compareTitle.textContent = `${company.name} (${company.ticker}): ${newestYear} vs ${previousYear} report`;
+    document.title = `RiskWatch | Compare ${company.ticker}`;
+
+    // ----- Company picker -----
+    companies.forEach(function (choice) {
+        const optionElement = document.createElement("option");
+        optionElement.setAttribute("value", choice.ticker);
+        optionElement.textContent = `${choice.name} (${choice.ticker})`;
+        companySelect.appendChild(optionElement);
+    });
+    companySelect.value = company.ticker;
+
+    companyPicker.addEventListener("submit", function (event) {
+        event.preventDefault();
+        window.location.href = `compare.html?ticker=${companySelect.value}`;
+    });
+
+    // ----- Summary counts -----
+    const counts = countChanges(company.ticker);
+    document.getElementById("count-new").textContent = counts.newCount;
+    document.getElementById("count-removed").textContent = counts.removedCount;
+    document.getElementById("count-edited").textContent = counts.editedCount;
+    document.getElementById("count-unchanged").textContent = counts.unchangedCount;
+
+    // ----- Change rows -----
+    riskChanges.forEach(function (change) {
+        if (change.ticker === company.ticker) {
+            changeList.appendChild(createChangeRow(change));
+        }
+    });
+
+    // ----- Filter buttons -----
+    // Each object pairs a button with the status it shows
+    const filters = [
+        { buttonId: "filter-all", status: "all" },
+        { buttonId: "filter-new", status: "new" },
+        { buttonId: "filter-removed", status: "removed" },
+        { buttonId: "filter-edited", status: "edited" }
+    ];
+    const filterButtons = document.querySelectorAll(".filter-btn");
+
+    filters.forEach(function (filter) {
+        const button = document.getElementById(filter.buttonId);
+
+        button.addEventListener("click", function () {
+            applyFilter(filter.status);
+
+            // Move the highlight to the clicked button
+            filterButtons.forEach(function (otherButton) {
+                otherButton.classList.remove("active-filter");
+                otherButton.setAttribute("aria-pressed", "false");
+            });
+            button.classList.add("active-filter");
+            button.setAttribute("aria-pressed", "true");
+        });
+    });
 }

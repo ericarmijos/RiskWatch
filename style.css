@@ -432,6 +432,186 @@ ul {
     color: #7a5b00;
 }
 
+.badge-unchanged {
+    background-color: #e3e8ef;
+    color: #45556a;
+}
+
+.badge-important {
+    background-color: #1d3557;
+    color: white;
+}
+
+/* -------------------------------------------------------------------------
+   Compare page (compare.html)
+   ------------------------------------------------------------------------- */
+/* Company dropdown and its button sit on one line */
+.picker-form {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.picker-form .form-group {
+    margin-bottom: 0;
+}
+
+/* Four count boxes that share the row evenly and wrap on small screens */
+.summary-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.summary-box {
+    flex: 1 1 140px;
+    text-align: center;
+    font-weight: bold;
+    padding: 14px;
+    border-radius: 6px;
+}
+
+/* Overrides ".section p" spacing so the boxes line up */
+.section .summary-box {
+    margin-bottom: 0;
+}
+
+.summary-number {
+    display: block;
+    font-size: 30px;
+}
+
+.filter-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-label {
+    font-weight: bold;
+    color: #1d3557;
+}
+
+.filter-btn {
+    font-family: inherit;
+    font-size: 15px;
+    padding: 6px 16px;
+    border: 1px solid #2a6f97;
+    border-radius: 20px;
+    background-color: white;
+    color: #2a6f97;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    background-color: #e3e8ef;
+}
+
+/* The filter that is currently on */
+.filter-btn.active-filter {
+    background-color: #2a6f97;
+    color: white;
+}
+
+/* One row per risk paragraph. The thick left border and the light
+   background both come from the status class below. */
+.change-row {
+    background-color: white;
+    border: 1px solid #d6dde6;
+    border-left: 6px solid #c9d6e3;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.change-new {
+    border-left-color: #2e7d32;
+    background-color: #f3fbf2;
+}
+
+.change-removed {
+    border-left-color: #c62828;
+    background-color: #fdf3f3;
+}
+
+.change-edited {
+    border-left-color: #d4a017;
+    background-color: #fffbea;
+}
+
+/* Badge, then the title (which takes the extra space), then "+ Note" */
+.change-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.change-header h3 {
+    flex: 1;
+    font-size: 17px;
+}
+
+.note-btn {
+    padding: 6px 14px;
+    font-size: 14px;
+}
+
+/* Older report on the left, newer report on the right */
+.change-sides {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.change-side {
+    flex: 1;
+}
+
+.side-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #5c6b7a;
+}
+
+.section .side-label {
+    margin-bottom: 4px;
+}
+
+.empty-side {
+    font-style: italic;
+    color: #7a8794;
+}
+
+.note-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    background-color: white;
+    border: 1px dashed #c9d6e3;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 10px;
+}
+
+.section .note-item p {
+    margin-bottom: 0;
+}
+
+.note-form {
+    margin-top: 14px;
+    max-width: 500px;
+}
+
 /* -------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------- */
@@ -490,5 +670,15 @@ ul {
     .company-layout {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    /* Older and newer text stack instead of squeezing side by side */
+    .change-sides {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .change-header {
+        flex-wrap: wrap;
     }
 }
