@@ -36,12 +36,25 @@
     <section class="page-header">
         <h1>Search Companies</h1>
         <p class="tagline">Find a company by name or ticker</p>
+
+        <!-- Same look as the home page form, but main.js filters the list
+             while the user types, so this form never leaves the page -->
+        <form class="search-form" id="search-form" novalidate>
+            <label for="search-input">Company name or ticker</label>
+            <div class="search-row">
+                <input type="text" id="search-input" name="q" placeholder='e.g. "Northwind" or "BLPK"'>
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </div>
+        </form>
     </section>
 
     <main>
         <section class="section" id="results">
             <h2>Results</h2>
-            <p>Coming in Step 4: live search box and results list.</p>
+
+            <!-- main.js fills in the count and the list from data.js -->
+            <p class="result-count" id="result-count"></p>
+            <ul class="result-list" id="search-results"></ul>
         </section>
     </main>
 

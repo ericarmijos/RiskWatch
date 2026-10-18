@@ -112,3 +112,105 @@ if (recentCards) {
         recentCards.appendChild(card);
     });
 }
+
+// =========================================================================
+// Search page (search.html)
+// =========================================================================
+
+// Returns true if the company's name or ticker contains the search text.
+// Both sides are lowercased so "acme", "ACME", and "Acme" all match.
+function matchesSearch(company, query) {
+    const name = company.name.toLowerCase();
+    const ticker = company.ticker.toLowerCase();
+    return name.includes(query) || ticker.includes(query);
+}
+
+// Builds one row in the results list: name, details, and an Open button
+function createResultItem(company) {
+    const item = document.createElement("li");
+    item.classList.add("result-item");
+
+    const info = document.createElement("div");
+
+    const heading = document.createElement("h3");
+    const nameLink = document.createElement("a");
+    nameLink.textContent = `${company.name} (${company.ticker})`;
+    nameLink.setAttribute("href", `company.html?ticker=${company.ticker}`);
+    heading.appendChild(nameLink);
+    info.appendChild(heading);
+
+    // reports[0] is the newest report, because data.js lists newest first
+    const details = document.createElement("p");
+    details.classList.add("card-meta");
+    details.textContent = `${company.industry} · ${company.reports.length} annual reports · Latest: ${company.reports[0].year}`;
+    info.appendChild(details);
+
+    item.appendChild(info);
+
+    const openLink = document.createElement("a");
+    openLink.textContent = "Open company";
+    openLink.setAttribute("href", `company.html?ticker=${company.ticker}`);
+    openLink.classList.add("btn");
+    openLink.classList.add("btn-primary");
+    item.appendChild(openLink);
+
+    return item;
+}
+
+const searchForm = document.getElementById("search-form");
+const searchInput = document.getElementById("search-input");
+const searchResults = document.getElementById("search-results");
+const resultCount = document.getElementById("result-count");
+
+// Clears the list, then adds back only the companies that match.
+// Rebuilding from data.js each time is simpler than hiding rows one by one.
+function showSearchResults(typedText) {
+    const query = typedText.trim().toLowerCase();
+    let matchCount = 0;
+
+    // Setting textContent to "" removes every old row from the list
+    searchResults.textContent = "";
+
+    companies.forEach(function (company) {
+        if (matchesSearch(company, query)) {
+            searchResults.appendChild(createResultItem(company));
+            matchCount += 1;
+        }
+    });
+
+    // Tell the user what they are looking at, including when nothing matched
+    if (matchCount === 0) {
+        resultCount.textContent = `No companies match "${typedText.trim()}". Try ACME, NWND, or BLPK.`;
+    } else if (query === "") {
+        resultCount.textContent = `Showing all ${matchCount} companies.`;
+    } else {
+        resultCount.textContent = `${matchCount} result(s) for "${typedText.trim()}".`;
+    }
+}
+
+if (searchForm && searchInput && searchResults && resultCount) {
+    // Stretch: URLSearchParams reads the "?q=acme" part of the address,
+    // which is how the home page's search form passes along what was typed
+    const params = new URLSearchParams(window.location.search);
+    const startingQuery = params.get("q");
+
+    if (startingQuery) {
+        searchInput.value = startingQuery;
+    }
+
+    // Show results right away (all companies if nothing was passed in)
+    showSearchResults(searchInput.value);
+
+    // Stretch: the "input" event fires on every keystroke, not just on submit,
+    // so the list filters live as the user types
+    searchInput.addEventListener("input", function () {
+        showSearchResults(searchInput.value);
+    });
+
+    // Pressing Enter would normally reload the page; the list is already
+    // up to date, so just stop the reload
+    searchForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        showSearchResults(searchInput.value);
+    });
+}
