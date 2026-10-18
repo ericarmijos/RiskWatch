@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Compare two years of a company's risk factors side by side.">
+    <meta name="author" content="Eric Armijos, Cody Wallen">
+    <title>RiskWatch | Compare</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+
+    <header class="site-header">
+        <nav class="navbar">
+            <a href="index.html" class="logo">RiskWatch</a>
+
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li><a href="compare.html" class="active">Compare</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+                <li><a href="watchlist.html#notes">Notes</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="page-header">
+        <h1>Compare Two Years</h1>
+        <p class="tagline">New, removed, and reworded risks side by side</p>
+    </section>
+
+    <main>
+        <section class="section" id="changes">
+            <h2>Changes</h2>
+            <p>Coming in Step 6: color-coded changes, summary counts, filter buttons, and the note form.</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; <span id="year"></span> RiskWatch &middot; Eric Armijos &amp; Cody Wallen</p>
+        <p class="footer-note">Data source: SEC EDGAR (public). This prototype uses made-up sample data.</p>
+    </footer>
+
+</body>
+</html>

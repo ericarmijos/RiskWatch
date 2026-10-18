@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RiskWatch shows which risk factors a company added, removed, or reworded in its annual report.">
+    <meta name="author" content="Eric Armijos, Cody Wallen">
+    <title>RiskWatch | Home</title>
+
+    <!-- One external stylesheet and one script, shared by all 5 pages -->
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+
+    <header class="site-header">
+        <!-- Using Flexbox to space the logo and nav links apart (see .navbar in style.css) -->
+        <nav class="navbar">
+            <a href="index.html" class="logo">RiskWatch</a>
+
+            <!-- Hamburger button only appears on small screens; main.js toggles the menu -->
+            <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li><a href="compare.html">Compare</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+                <li><a href="watchlist.html#notes">Notes</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="page-header">
+        <h1>See what changed in a company's risks</h1>
+        <p class="tagline">Search any public company by name or ticker</p>
+    </section>
+
+    <main>
+        <section class="section" id="recent">
+            <h2>Recently filed reports with the most changes</h2>
+            <p>Coming in Step 3: search form and company cards.</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; <span id="year"></span> RiskWatch &middot; Eric Armijos &amp; Cody Wallen</p>
+        <p class="footer-note">Data source: SEC EDGAR (public). This prototype uses made-up sample data.</p>
+    </footer>
+
+</body>
+</html>
