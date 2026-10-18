@@ -11,10 +11,13 @@
     box-sizing: border-box;
 }
 
+/* System font stack: each device uses its own built-in UI font
+   (San Francisco on Mac/iPhone, Segoe UI on Windows, Roboto on Android),
+   falling back to Arial if none of those exist */
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #222222;
-    background-color: #f4f6f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1f2937;
+    background-color: #f6f8fb;
     line-height: 1.6;
 }
 
@@ -38,20 +41,27 @@ ul {
 /* -------------------------------------------------------------------------
    Navbar
    ------------------------------------------------------------------------- */
-/* Using Flexbox to push the logo to one side and links to the other */
+/* Using Flexbox to push the logo to one side and links to the other.
+   A white bar with a thin border and soft shadow separates it from the page. */
 .navbar {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background-color: #1d3557;
-    padding: 16px 6%;
+    background-color: white;
+    border-bottom: 1px solid #e5e9f0;
+    box-shadow: 0 1px 6px rgba(16, 24, 40, 0.06);
+    padding: 12px 6%;
     position: relative;
 }
 
+/* Logo mark and name side by side */
 .logo {
-    color: white;
-    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1d3557;
+    font-size: 20px;
     font-weight: bold;
 }
 
@@ -59,26 +69,46 @@ ul {
     text-decoration: none;
 }
 
+/* Small rounded square with an "R", used as a simple logo */
+.logo-mark {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-image: linear-gradient(135deg, #2a6f97, #1d3557);
+    color: white;
+    font-size: 16px;
+}
+
 .nav-links {
     display: flex;
     flex-direction: row;
-    gap: 24px;
+    align-items: center;
+    gap: 6px;
 }
 
+/* Each link is a rounded "pill" so hover and active states have a shape */
 .nav-links a {
-    color: white;
-    font-weight: bold;
-    padding-bottom: 4px;
+    display: block;
+    color: #4b5563;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 20px;
 }
 
 .nav-links a:hover {
-    color: #a8dadc;
+    background-color: #f1f5f9;
+    color: #1d3557;
     text-decoration: none;
 }
 
-/* Underline marks the page the user is on right now */
+/* Tinted pill marks the page the user is on right now */
 .nav-links a.active {
-    border-bottom: 2px solid white;
+    background-color: #e6f0f7;
+    color: #2a6f97;
 }
 
 /* Hamburger button: hidden by default, only shown on small screens */
@@ -97,7 +127,8 @@ ul {
 .nav-toggle .bar {
     width: 100%;
     height: 3px;
-    background-color: white;
+    border-radius: 2px;
+    background-color: #1d3557;
 }
 
 /* -------------------------------------------------------------------------
@@ -106,18 +137,23 @@ ul {
 .page-header {
     background-image: linear-gradient(135deg, #1d3557, #2a6f97);
     color: white;
-    padding: 50px 6%;
+    padding: 56px 6%;
     text-align: center;
 }
 
+/* Slightly tighter letter spacing makes big headings look cleaner */
 .page-header h1 {
     color: white;
     font-size: 36px;
+    letter-spacing: -0.5px;
     margin-bottom: 8px;
 }
 
+/* rgba(255, 255, 255, 0.85) = white at 85% opacity, so the tagline looks
+   a little softer than the heading */
 .tagline {
     font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* -------------------------------------------------------------------------
@@ -146,9 +182,10 @@ ul {
     flex: 1;
     font-family: inherit;
     font-size: 16px;
-    padding: 10px 14px;
-    border: 1px solid #c0c0c0;
-    border-radius: 4px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.15);
 }
 
 .search-row input:focus {
@@ -166,10 +203,9 @@ ul {
 }
 
 .section h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    border-left: 4px solid #2a6f97;
-    padding-left: 12px;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    margin-bottom: 18px;
 }
 
 .section p {
@@ -183,7 +219,7 @@ ul {
     display: inline-block;
     padding: 10px 22px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-family: inherit;
     font-size: 15px;
     font-weight: bold;
@@ -204,12 +240,12 @@ ul {
 }
 
 .btn-secondary {
-    background-color: #e3e8ef;
+    background-color: #eef2f7;
     color: #1d3557;
 }
 
 .btn-secondary:hover {
-    background-color: #cfd7e2;
+    background-color: #dfe6ef;
 }
 
 /* Red button for actions that take something away (Remove, Delete) */
@@ -235,11 +271,23 @@ ul {
 
 .company-card {
     flex: 1 1 260px;
+    padding: 22px;
+}
+
+/* Shared "card" look: white, rounded corners, light border, soft shadow.
+   Grouping the selectors keeps every card on every page consistent. */
+.company-card,
+.result-item,
+.report-item,
+.compare-panel,
+.form-panel,
+.change-row,
+.note-card,
+.table-wrapper {
     background-color: white;
-    border: 1px solid #d6dde6;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    padding: 20px;
+    border: 1px solid #e5e9f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
 .company-card h3 {
@@ -265,9 +313,6 @@ ul {
     justify-content: space-between;
     align-items: center;
     gap: 16px;
-    background-color: white;
-    border: 1px solid #d6dde6;
-    border-radius: 6px;
     padding: 16px 20px;
     margin-bottom: 12px;
 }
@@ -283,8 +328,9 @@ ul {
 /* -------------------------------------------------------------------------
    Company page (company.html)
    ------------------------------------------------------------------------- */
-/* Space between the tagline and the Add to Watchlist button in the banner */
-.page-header .btn {
+/* Space between the tagline and the Add to Watchlist button in the banner.
+   Uses the id so the search buttons in other banners are not pushed down. */
+#watchlist-btn {
     margin-top: 16px;
 }
 
@@ -310,26 +356,18 @@ ul {
     flex: 1;
 }
 
-/* Shared look for the boxed forms (compare panel, add-note form) */
+/* Padding for the boxed forms (compare panel, add-note form) */
 .compare-panel,
 .form-panel {
-    background-color: #e9eef4;
-    border: 1px solid #d6dde6;
-    border-radius: 6px;
-    padding: 20px;
+    padding: 22px;
 }
 
-/* Smaller heading inside the panel, without the blue bar from .section h2 */
+/* Smaller heading inside the panel */
 .compare-panel h2 {
-    font-size: 20px;
-    border-left: none;
-    padding-left: 0;
+    font-size: 19px;
 }
 
 .report-item {
-    background-color: white;
-    border: 1px solid #d6dde6;
-    border-radius: 6px;
     padding: 14px 18px;
     margin-bottom: 12px;
 }
@@ -395,9 +433,9 @@ ul {
 .form-group textarea {
     font-family: inherit;
     font-size: 15px;
-    padding: 8px 10px;
-    border: 1px solid #c0c0c0;
-    border-radius: 4px;
+    padding: 9px 12px;
+    border: 1px solid #d0d7e2;
+    border-radius: 8px;
     background-color: white;
     /* A dropdown is as wide as its longest option by default; this keeps
        long options (like change titles) from pushing past the screen edge */
@@ -490,8 +528,8 @@ ul {
     flex: 1 1 140px;
     text-align: center;
     font-weight: bold;
-    padding: 14px;
-    border-radius: 6px;
+    padding: 16px;
+    border-radius: 12px;
 }
 
 /* Overrides ".section p" spacing so the boxes line up */
@@ -529,7 +567,7 @@ ul {
 }
 
 .filter-btn:hover {
-    background-color: #e3e8ef;
+    background-color: #eef2f7;
 }
 
 /* The filter that is currently on */
@@ -538,13 +576,10 @@ ul {
     color: white;
 }
 
-/* One row per risk paragraph. The thick left border and the light
+/* One row per risk paragraph. The colored left border and the light
    background both come from the status class below. */
 .change-row {
-    background-color: white;
-    border: 1px solid #d6dde6;
-    border-left: 6px solid #c9d6e3;
-    border-radius: 6px;
+    border-left: 5px solid #c9d6e3;
     padding: 16px 20px;
     margin-bottom: 16px;
 }
@@ -616,7 +651,7 @@ ul {
     gap: 10px;
     background-color: white;
     border: 1px dashed #c9d6e3;
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 8px 12px;
     margin-top: 10px;
 }
@@ -633,7 +668,9 @@ ul {
 /* -------------------------------------------------------------------------
    Watchlist & Notes page (watchlist.html)
    ------------------------------------------------------------------------- */
-/* Only the table scrolls sideways if it is too wide, not the whole page */
+/* Only the table scrolls sideways if it is too wide, not the whole page.
+   The wrapper also carries the card look (rounded corners), because a
+   table with border-collapse can't round its own corners. */
 .table-wrapper {
     overflow-x: auto;
 }
@@ -641,8 +678,6 @@ ul {
 .watchlist-table {
     width: 100%;
     border-collapse: collapse;
-    background-color: white;
-    border: 1px solid #d6dde6;
 }
 
 .watchlist-table th,
@@ -653,9 +688,9 @@ ul {
 }
 
 .watchlist-table th {
-    background-color: #e9eef4;
-    color: #1d3557;
-    font-size: 14px;
+    background-color: #f6f8fb;
+    color: #4b5563;
+    font-size: 13px;
 }
 
 /* The badges already have a bottom margin for cards; not needed in a cell */
@@ -692,9 +727,6 @@ ul {
 }
 
 .note-card {
-    background-color: white;
-    border: 1px solid #d6dde6;
-    border-radius: 6px;
     padding: 16px 20px;
     margin-bottom: 14px;
 }
@@ -721,9 +753,12 @@ ul {
 /* -------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------- */
+/* Light footer with a thin top border, matching the white navbar */
 .site-footer {
-    background-color: #1d3557;
-    color: white;
+    background-color: white;
+    border-top: 1px solid #e5e9f0;
+    color: #4b5563;
+    font-size: 14px;
     text-align: center;
     padding: 24px 6%;
     margin-top: 40px;
@@ -731,7 +766,7 @@ ul {
 
 .footer-note {
     font-size: 13px;
-    color: #c9d6e3;
+    color: #6b7280;
 }
 
 /* -------------------------------------------------------------------------
@@ -749,9 +784,12 @@ ul {
         top: 100%;
         left: 0;
         width: 100%;
-        background-color: #1d3557;
-        padding: 16px 6%;
-        gap: 16px;
+        background-color: white;
+        border-bottom: 1px solid #e5e9f0;
+        box-shadow: 0 8px 16px rgba(16, 24, 40, 0.08);
+        padding: 10px 6%;
+        gap: 4px;
+        align-items: stretch;
         z-index: 10;
     }
 
