@@ -32,12 +32,12 @@ A shared navigation bar (Home, Search, Compare, Watchlist, Notes) appears on eve
 
 ## How to Run
 
-No install or build step is needed.
+**Live demo:** https://ericarmijos.github.io/RiskWatch/
+
+To run it locally, no install or build step is needed:
 
 1. Clone or download this repository.
 2. Open the folder in VS Code and start **Live Server** on `index.html`, or just double-click `index.html` to open it in a browser.
-
-<!-- TODO: add the GitHub Pages link here if we publish one -->
 
 ## What Is Simulated with Dummy Data
 
