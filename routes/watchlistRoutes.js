@@ -32,7 +32,7 @@ router.route("/")
 router.route("/:ticker")
     .delete((req, res) => {
         console.log(getWatchlist());
-        console.log("Ticker received:", req.params.ticker);
+    console.log("Ticker received:", req.params.ticker);
         const deleted = deleteFromWatchlist(req.params.ticker);
         if (!deleted) {
             return res.status(404).json({
