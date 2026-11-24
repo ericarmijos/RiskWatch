@@ -3,6 +3,9 @@
 // Each block checks that its elements exist before using them, since not
 // every page has every element (e.g. only compare.html has filter buttons).
 
+// Address of the Express backend (app.js)
+const API = "http://localhost:3000";
+
 // ----- Mobile navigation toggle -----
 const navToggle = document.getElementById("nav-toggle");
 const navLinks = document.getElementById("nav-links");
@@ -109,6 +112,43 @@ function createCompanyCard(company) {
     return card;
 }
 
+// ----- Watchlist API helpers (talk to the Express backend + SQLite) -----
+
+// GET /watchlist. Returns an array of { id, name, ticker, added_at }.
+// Returns an empty array if the server is down or returns an error.
+async function loadWatchlist() {
+    try {
+        const response = await fetch(`${API}/watchlist`);
+        if (!response.ok) {
+            return [];
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Watchlist load error:", error);
+        return [];
+    }
+}
+
+// POST /watchlist. The backend requires name, ticker, and added_at.
+function saveToWatchlist(ticker, name) {
+    return fetch(`${API}/watchlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            ticker: ticker,
+            name: name,
+            added_at: new Date().toISOString()
+        })
+    });
+}
+
+// DELETE /watchlist/:ticker
+function removeFromWatchlist(ticker) {
+    return fetch(`${API}/watchlist/${encodeURIComponent(ticker)}`, {
+        method: "DELETE"
+    });
+}
+
 // =========================================================================
 // Home page (index.html)
 // =========================================================================
@@ -127,6 +167,25 @@ if (recentCards) {
 // =========================================================================
 // Search page (search.html)
 // =========================================================================
+
+// ----- SEC company lookup -----
+// Asks the backend (which asks sec.gov). Returns [] if anything fails.
+async function searchSECCompanies(searchTerm) {
+    try {
+        const url = `${API}/api/sec/search?q=${encodeURIComponent(searchTerm)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "SEC search failed");
+        }
+
+        return data;
+    } catch (error) {
+        console.error("SEC Search Error:", error);
+        return [];
+    }
+}
 
 // Returns true if the company's name or ticker contains the search text.
 // Both sides are lowercased so "acme", "ACME", and "Acme" all match.
@@ -199,30 +258,158 @@ function showSearchResults(typedText) {
     }
 }
 
-if (searchForm && searchInput && searchResults && resultCount) {
-    // Stretch: URLSearchParams reads the "?q=acme" part of the address,
-    // which is how the home page's search form passes along what was typed
-    const params = new URLSearchParams(window.location.search);
-    const startingQuery = params.get("q");
+// Fills a card's detail line like "Manufacturing · 4 annual reports · Latest: 2026".
+// The SEC search results only have a name, ticker, and CIK, so the backend
+// looks up the rest. If that fails, the card keeps a simple fallback line.
+async function fillSECDetails(company, detailsElement) {
+    try {
+        const response = await fetch(`${API}/api/sec/summary/${encodeURIComponent(company.cik)}`);
+        const summary = await response.json();
 
-    if (startingQuery) {
-        searchInput.value = startingQuery;
+        if (!response.ok) {
+            throw new Error(summary.error || "Summary lookup failed");
+        }
+
+        const reportWord = summary.reportCount === 1 ? "annual report" : "annual reports";
+        const latest = summary.latestYear ? summary.latestYear : "N/A";
+
+        detailsElement.textContent =
+            `${summary.industry} · ${summary.reportCount} ${reportWord} · Latest: ${latest}`;
+    } catch (error) {
+        console.error("SEC summary error:", error);
+        detailsElement.textContent = `SEC filer · CIK ${company.cik}`;
+    }
+}
+
+let secSearchRequest = 0;
+
+async function showSECResults(searchTerm) {
+    const requestNumber = ++secSearchRequest;
+
+    const query = searchTerm.trim();
+
+    // Too short: just clear any old SEC section and stop
+    if (query.length < 2) {
+        const old = document.getElementById("sec-results-section");
+        if (old) old.remove();
+        return;
     }
 
-    // Show results right away (all companies if nothing was passed in)
-    showSearchResults(searchInput.value);
+    const results = await searchSECCompanies(query);
 
-    // Stretch: the "input" event fires on every keystroke, not just on submit,
-    // so the list filters live as the user types
+    // Ignore outdated requests
+    if (requestNumber !== secSearchRequest) return;
+
+    // Remove the old section only after the new data has arrived
+    const old = document.getElementById("sec-results-section");
+    if (old) old.remove();
+
+    const section = document.createElement("section");
+    section.setAttribute("id", "sec-results-section");
+
+    const heading = document.createElement("h2");
+    heading.textContent = "SEC Results";
+    section.appendChild(heading);
+
+    const list = document.createElement("ul");
+    list.setAttribute("id", "sec-results");
+    list.className = searchResults.className; // same look as the local list
+    section.appendChild(list);
+
+    if (results.length === 0) {
+        const message = document.createElement("p");
+        message.textContent = `No SEC companies found for "${query}".`;
+        section.appendChild(message);
+    } else {
+        results.forEach(function (company, index) {
+            // The company page gets the name and ticker from the address,
+            // since SEC companies are not in data.js
+            const href =
+                `company.html?ticker=${encodeURIComponent(company.ticker)}` +
+                `&name=${encodeURIComponent(company.title)}`;
+
+            const item = document.createElement("li");
+            item.classList.add("result-item");
+
+            const info = document.createElement("div");
+
+            const nameHeading = document.createElement("h3");
+            const nameLink = document.createElement("a");
+            nameLink.textContent = `${company.title} (${company.ticker})`;
+            nameLink.setAttribute("href", href);
+            nameHeading.appendChild(nameLink);
+            info.appendChild(nameHeading);
+
+            const details = document.createElement("p");
+            details.classList.add("card-meta");
+            details.textContent = `SEC filer · CIK ${company.cik}`;
+            info.appendChild(details);
+
+            // Only the first 10 cards look up details, to stay within SEC rate limits
+            if (index < 10) {
+                details.textContent = "Loading details...";
+                fillSECDetails(company, details);
+            }
+
+            item.appendChild(info);
+
+            const openLink = document.createElement("a");
+            openLink.textContent = "Open company";
+            openLink.setAttribute("href", href);
+            openLink.classList.add("btn");
+            openLink.classList.add("btn-primary");
+            item.appendChild(openLink);
+
+            list.appendChild(item);
+        });
+    }
+
+    // Place it directly after the local results list
+    searchResults.insertAdjacentElement("afterend", section);
+}
+
+if (searchForm && searchInput && searchResults && resultCount) {
+
+    // If the home page sent a search (for example search.html?q=apple),
+    // use it. Otherwise start with an empty search bar.
+    const urlParams = new URLSearchParams(window.location.search);
+    const startingQuery = (
+        urlParams.get("q") ||
+        urlParams.get("query") ||
+        urlParams.get("search") ||
+        Array.from(urlParams.values())[0] ||
+        ""
+    ).trim();
+
+    searchInput.value = startingQuery;
+
+    // Remove the search from the address so reloading the page starts empty
+    try {
+        window.history.replaceState(null, "", window.location.pathname);
+    } catch (error) {
+        console.error("Could not clean the address:", error);
+    }
+
+    // Show results when the page first loads
+    showSearchResults(startingQuery);
+    showSECResults(startingQuery);
+
+    // Update both searches as the user types
     searchInput.addEventListener("input", function () {
-        showSearchResults(searchInput.value);
+        const query = searchInput.value.trim();
+
+        showSearchResults(query);
+        showSECResults(query);
     });
 
-    // Pressing Enter would normally reload the page; the list is already
-    // up to date, so just stop the reload
+    // Handle pressing Enter
     searchForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        showSearchResults(searchInput.value);
+
+        const query = searchInput.value.trim();
+
+        showSearchResults(query);
+        showSECResults(query);
     });
 }
 
@@ -340,13 +527,53 @@ const olderSelect = document.getElementById("older-year");
 const compareError = document.getElementById("compare-error");
 
 // Shows the right button text depending on whether the company is
-// already in the watchlist array from data.js
-function updateWatchlistButton(ticker) {
-    if (watchlist.indexOf(ticker) === -1) {
-        watchlistButton.textContent = "+ Add to Watchlist";
-    } else {
-        watchlistButton.textContent = "✓ On Watchlist";
-    }
+// already saved in the database
+async function updateWatchlistButton(ticker) {
+    const rows = await loadWatchlist();
+    const onList = rows.some(function (saved) {
+        return saved.ticker === ticker;
+    });
+
+    watchlistButton.textContent = onList ? "✓ On Watchlist" : "+ Add to Watchlist";
+}
+
+// Wires the company page button to the database. Clicking adds the company
+// if it is not saved yet, or removes it if it is.
+function setupWatchlistButton(ticker, name) {
+    updateWatchlistButton(ticker);
+
+    watchlistButton.addEventListener("click", async function () {
+        watchlistButton.disabled = true;
+
+        try {
+            const rows = await loadWatchlist();
+            const onList = rows.some(function (saved) {
+                return saved.ticker === ticker;
+            });
+
+            if (onList) {
+                const response = await removeFromWatchlist(ticker);
+                watchlistMessage.textContent = response.ok
+                    ? `Removed ${ticker} from your watchlist.`
+                    : `Could not remove (status ${response.status}).`;
+            } else {
+                const response = await saveToWatchlist(ticker, name);
+                if (response.ok) {
+                    watchlistMessage.textContent = `Added ${ticker} to your watchlist.`;
+                } else if (response.status === 409) {
+                    watchlistMessage.textContent = `${ticker} is already on your watchlist.`;
+                } else {
+                    watchlistMessage.textContent = `Could not add (status ${response.status}).`;
+                }
+            }
+        } catch (error) {
+            console.error("Watchlist button error:", error);
+            watchlistMessage.textContent = "Could not reach the server.";
+        }
+
+        await updateWatchlistButton(ticker);
+        watchlistButton.disabled = false;
+    });
 }
 
 // Adds one <option> per report year to a dropdown
@@ -369,24 +596,8 @@ function showCompanyPage(company) {
         reportList.appendChild(createReportItem(company.ticker, report));
     });
 
-    // ----- Add to / remove from watchlist -----
-    // Changes the watchlist array in memory only, so it resets when the
-    // user leaves the page (no database until a later milestone)
-    updateWatchlistButton(company.ticker);
-
-    watchlistButton.addEventListener("click", function () {
-        const position = watchlist.indexOf(company.ticker);
-
-        if (position === -1) {
-            watchlist.push(company.ticker);
-            watchlistMessage.textContent = `Added ${company.ticker} to your watchlist. (Prototype: this resets when you leave the page.)`;
-        } else {
-            watchlist.splice(position, 1);
-            watchlistMessage.textContent = `Removed ${company.ticker} from your watchlist.`;
-        }
-
-        updateWatchlistButton(company.ticker);
-    });
+    // ----- Add to / remove from watchlist (saved in the database) -----
+    setupWatchlistButton(company.ticker, company.name);
 
     // ----- Compare form -----
     // Default to the two newest reports, since that pair has sample changes
@@ -415,6 +626,94 @@ function showCompanyPage(company) {
     });
 }
 
+// Shown for companies that come from the SEC search (not in data.js).
+// There are no sample reports for them, so only the watchlist button works.
+// Turns an SEC date like "2025-10-31" into "Oct 2025", matching data.js
+function formatFiledDate(dateText) {
+    const date = new Date(`${dateText}T00:00:00`);
+    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+// Builds one report row for an SEC filing. Same layout as createReportItem,
+// but the button opens the real 10-K on sec.gov instead of showing sample risks.
+function createSECReportItem(filing) {
+    const item = document.createElement("li");
+    item.classList.add("report-item");
+
+    const row = document.createElement("div");
+    row.classList.add("report-row");
+
+    const info = document.createElement("div");
+    const heading = document.createElement("h3");
+    heading.textContent = `${filing.year} Annual Report`;
+    info.appendChild(heading);
+
+    const details = document.createElement("p");
+    details.classList.add("card-meta");
+    details.textContent = `Filed ${formatFiledDate(filing.filed)} · Form 10-K`;
+    info.appendChild(details);
+    row.appendChild(info);
+
+    const readLink = document.createElement("a");
+    readLink.textContent = "Read report";
+    readLink.setAttribute("href", filing.url);
+    readLink.setAttribute("target", "_blank");
+    readLink.setAttribute("rel", "noopener noreferrer");
+    readLink.classList.add("btn");
+    readLink.classList.add("btn-secondary");
+    row.appendChild(readLink);
+
+    item.appendChild(row);
+    return item;
+}
+
+async function showSECCompanyPage(ticker, name) {
+    companyName.textContent = `${name} (${ticker})`;
+    companyMeta.textContent = "Loading annual reports...";
+    document.title = `RiskWatch | ${name}`;
+
+    // The watchlist button and compare form work even if the reports fail to load
+    setupWatchlistButton(ticker, name);
+
+    compareForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        compareError.textContent = "Risk comparisons are only available for the sample companies in this prototype.";
+    });
+
+    // ----- Annual reports from the SEC (through the backend) -----
+    let filings = [];
+
+    try {
+        const response = await fetch(`${API}/api/sec/filings?ticker=${encodeURIComponent(ticker)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Filings lookup failed");
+        }
+
+        filings = data.filings || [];
+    } catch (error) {
+        console.error("Filings error:", error);
+        companyMeta.textContent = "Annual reports are not available right now.";
+        return;
+    }
+
+    companyMeta.textContent = `Annual reports on file: ${filings.length}`;
+
+    filings.forEach(function (filing) {
+        reportList.appendChild(createSECReportItem(filing));
+    });
+
+    // Same dropdowns as the sample companies, filled with the real years
+    fillYearSelect(newerSelect, filings);
+    fillYearSelect(olderSelect, filings);
+
+    if (filings.length > 1) {
+        newerSelect.value = filings[0].year;
+        olderSelect.value = filings[1].year;
+    }
+}
+
 // Shown when the address has no ticker, or one that is not in data.js
 function showCompanyNotFound() {
     companyName.textContent = "Company not found";
@@ -433,10 +732,13 @@ function showCompanyNotFound() {
 
 if (companyName && reportList && watchlistButton && compareForm) {
     const params = new URLSearchParams(window.location.search);
-    const company = findCompany(params.get("ticker"));
+    const ticker = params.get("ticker");
+    const company = findCompany(ticker);
 
     if (company) {
         showCompanyPage(company);
+    } else if (ticker && params.get("name")) {
+        showSECCompanyPage(ticker, params.get("name"));
     } else {
         showCompanyNotFound();
     }
@@ -766,7 +1068,32 @@ const watchlistAddForm = document.getElementById("watchlist-add-form");
 const watchlistAddSelect = document.getElementById("watchlist-add-select");
 const watchlistAddButton = document.getElementById("watchlist-add-btn");
 
-// Builds one table row: company, latest report, change counts, and buttons
+// Builds the Remove button used by both kinds of watchlist rows.
+// Deletes the row from the database, then redraws the table.
+function createRemoveButton(ticker) {
+    const removeButton = document.createElement("button");
+    removeButton.setAttribute("type", "button");
+    removeButton.classList.add("btn");
+    removeButton.classList.add("btn-danger");
+    removeButton.textContent = "Remove";
+
+    removeButton.addEventListener("click", async function () {
+        removeButton.disabled = true;
+
+        try {
+            await removeFromWatchlist(ticker);
+        } catch (error) {
+            console.error("Remove error:", error);
+        }
+
+        showWatchlist();
+    });
+
+    return removeButton;
+}
+
+// Builds one table row for a company from data.js: company, latest report,
+// change counts, and buttons
 function createWatchlistRow(company) {
     const counts = countChanges(company.ticker);
     const latestReport = company.reports[0];
@@ -804,19 +1131,7 @@ function createWatchlistRow(company) {
     viewLink.classList.add("btn-secondary");
     actions.appendChild(viewLink);
 
-    const removeButton = document.createElement("button");
-    removeButton.setAttribute("type", "button");
-    removeButton.classList.add("btn");
-    removeButton.classList.add("btn-danger");
-    removeButton.textContent = "Remove";
-    actions.appendChild(removeButton);
-
-    // Take the ticker out of the array, then redraw the whole table
-    removeButton.addEventListener("click", function () {
-        const position = watchlist.indexOf(company.ticker);
-        watchlist.splice(position, 1);
-        showWatchlist();
-    });
+    actions.appendChild(createRemoveButton(company.ticker));
 
     actionsCell.appendChild(actions);
     row.appendChild(actionsCell);
@@ -824,14 +1139,61 @@ function createWatchlistRow(company) {
     return row;
 }
 
-// Refills the "Add a company" dropdown with companies that are not watched yet.
-// If every company is already watched, the dropdown and button are disabled.
-function fillWatchlistAddSelect() {
+// Finds the company name in a saved watchlist row. Depending on how the
+// database table was built, the column may be called name, title, etc.
+function getSavedName(saved) {
+    return saved.name || saved.title || saved.company_name || saved.companyName || saved.ticker;
+}
+
+// Builds one table row for a company saved from the SEC search.
+// These are not in data.js, so there are no reports or change counts.
+function createSECWatchlistRow(saved) {
+    const row = document.createElement("tr");
+
+    const nameCell = document.createElement("td");
+    const nameLink = document.createElement("a");
+    const savedName = getSavedName(saved);
+    nameLink.textContent = `${savedName} (${saved.ticker})`;
+    nameLink.setAttribute(
+        "href",
+        `company.html?ticker=${encodeURIComponent(saved.ticker)}` +
+        `&name=${encodeURIComponent(savedName)}`
+    );
+    nameCell.appendChild(nameLink);
+    row.appendChild(nameCell);
+
+    const infoCell = document.createElement("td");
+    const addedDate = new Date(saved.added_at);
+    infoCell.textContent = Number.isNaN(addedDate.getTime())
+        ? "SEC filer"
+        : `Added ${addedDate.toLocaleDateString()}`;
+    row.appendChild(infoCell);
+
+    // No change counts for SEC companies
+    row.appendChild(document.createElement("td"));
+
+    const actionsCell = document.createElement("td");
+    const actions = document.createElement("div");
+    actions.classList.add("table-actions");
+    actions.appendChild(createRemoveButton(saved.ticker));
+    actionsCell.appendChild(actions);
+    row.appendChild(actionsCell);
+
+    return row;
+}
+
+// Refills the "Add a company" dropdown with data.js companies that are not
+// saved yet. If every one is already saved, the dropdown and button are disabled.
+function fillWatchlistAddSelect(savedRows) {
     watchlistAddSelect.textContent = "";
     let availableCount = 0;
 
     companies.forEach(function (company) {
-        if (watchlist.indexOf(company.ticker) === -1) {
+        const alreadySaved = savedRows.some(function (saved) {
+            return saved.ticker === company.ticker;
+        });
+
+        if (!alreadySaved) {
             const option = document.createElement("option");
             option.setAttribute("value", company.ticker);
             option.textContent = `${company.name} (${company.ticker})`;
@@ -843,7 +1205,7 @@ function fillWatchlistAddSelect() {
     if (availableCount === 0) {
         const option = document.createElement("option");
         option.setAttribute("value", "");
-        option.textContent = "All companies are on your watchlist";
+        option.textContent = "All sample companies are on your watchlist";
         watchlistAddSelect.appendChild(option);
         watchlistAddSelect.setAttribute("disabled", "");
         watchlistAddButton.setAttribute("disabled", "");
@@ -853,20 +1215,25 @@ function fillWatchlistAddSelect() {
     }
 }
 
-// Redraws the table from the watchlist array. Called after every add or
-// remove, so the page always matches the array.
-function showWatchlist() {
+// Redraws the table from the database (GET /watchlist). Called on page load
+// and after every add or remove, so the page always matches the database.
+async function showWatchlist() {
+    const rows = await loadWatchlist();
+
     watchlistBody.textContent = "";
 
-    watchlist.forEach(function (ticker) {
-        const company = findCompany(ticker);
+    rows.forEach(function (saved) {
+        const company = findCompany(saved.ticker);
+
         if (company) {
             watchlistBody.appendChild(createWatchlistRow(company));
+        } else {
+            watchlistBody.appendChild(createSECWatchlistRow(saved));
         }
     });
 
     // Swap the table for a friendly message when nothing is left
-    if (watchlist.length === 0) {
+    if (rows.length === 0) {
         watchlistTable.classList.add("hidden");
         watchlistEmpty.classList.remove("hidden");
     } else {
@@ -874,18 +1241,25 @@ function showWatchlist() {
         watchlistEmpty.classList.add("hidden");
     }
 
-    fillWatchlistAddSelect();
+    fillWatchlistAddSelect(rows);
 }
 
 if (watchlistBody && watchlistTable && watchlistAddForm) {
     showWatchlist();
 
-    watchlistAddForm.addEventListener("submit", function (event) {
+    watchlistAddForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const ticker = watchlistAddSelect.value;
-        if (ticker !== "") {
-            watchlist.push(ticker);
+        const company = findCompany(ticker);
+
+        if (ticker !== "" && company) {
+            try {
+                await saveToWatchlist(company.ticker, company.name);
+            } catch (error) {
+                console.error("Add error:", error);
+            }
+
             showWatchlist();
         }
     });
