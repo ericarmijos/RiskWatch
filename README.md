@@ -4,6 +4,7 @@
 
 CSI 345 Web Software Development · Muhlenberg College · Fall 2026
 Team Full-Stack Project · Milestone 3: Backend and Database Integration
+Link to repository: ericarmijos.github.io/RiskWatch/
 
 ## Team Members
 
