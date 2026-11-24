@@ -9,6 +9,7 @@ Team Full-Stack Project · Milestone 2: Frontend Prototype
 
 - Eric Armijos
 - Cody Wallen
+- Charley Madlock
 
 ## About the Prototype
 
