@@ -3,8 +3,11 @@
 // Each block checks that its elements exist before using them, since not
 // every page has every element (e.g. only compare.html has filter buttons).
 
-// Address of the Express backend (app.js)
-const API = "http://localhost:3000";
+// Address of the Express backend (app.js).
+// Live Server (port 5500) is a different server, so it needs the full address.
+// When Express serves the pages itself (locally on port 3000 or on a host
+// like Render), a blank address means "the same server", so it works anywhere.
+const API = window.location.port === "5500" ? "http://localhost:3000" : "";
 
 // ----- Mobile navigation toggle -----
 const navToggle = document.getElementById("nav-toggle");
