@@ -5,7 +5,7 @@ const app  = express();
 const cors = require ("cors");
 
 app.use(cors({
-    origin: "http://127.0.0.1:5500"
+    origin: "https://ericarmijos.github.io/RiskWatch/search.html"
 }));
 
 app.use(express.json());
