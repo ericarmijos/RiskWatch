@@ -3,13 +3,56 @@
 **See what changed in a company's risk disclosures, year over year.**
 
 CSI 345 Web Software Development · Muhlenberg College · Fall 2026
-Team Full-Stack Project · Milestone 2: Frontend Prototype
+Team Full-Stack Project · Milestone 3: Backend and Database Integration
 
 ## Team Members
 
 - Eric Armijos
 - Cody Wallen
 - Charley Madlock
+
+## Current Project Status
+We have created the databases for the companies and for the watchlist so that customers can choose which companies they want to watch. 
+
+## Backend technologies used
+We used Node.js and Express to help create the backend of our project. 
+
+## Database used
+Our two databases are called companies.db and watchlist.db. They can be found on your local computer since we made them through vs code. 
+
+## Main data model/resource
+We are using SQlite within VS code. This is the one that we went over in class and since it is the one that we have the most knowledge about, we decided to use it.
+
+## Current working backend features
+The GET, POST, and DELETE functions all work inside of the databases. We were also able to create a database in our local computers. 
+
+## Which frontend feature is currently connected to the backend/database
+The frontend feature that is currently connected to the backend/database is the watchlist button. You are able to click on it and it will save in your watchlist inside the database. 
+
+## Instructions for running the application
+**Live demo:** https://ericarmijos.github.io/RiskWatch/
+
+To run it locally, no install or build step is needed:
+
+1. Clone or download this repository. 
+2. Make sure to install node and express onto your computer.
+3. When everything is installed you can type in node app.js and it will start the server for you.
+4. Open the folder in VS Code and start **Live Server** on `index.html`, or just double-click `index.html` to open it in a browser.
+5. Go to the search bar and type in a name of a company.
+6. Click on the open company and you can decide to add it to your watchlist or not. 
+
+# What your team plans to complete next
+Next we plan on building the comparing area, 
+
+
+
+CSI 345 Web Software Development · Muhlenberg College · Fall 2026
+Team Full-Stack Project · Milestone 2: Frontend Prototype
+
+## Team Members
+
+- Eric Armijos
+- Cody Wallen
 
 ## About the Prototype
 
