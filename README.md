@@ -12,37 +12,47 @@ Team Full-Stack Project · Milestone 3: Backend and Database Integration
 - Charley Madlock
 
 ## Current Project Status
-We have created the databases for the companies and for the watchlist so that customers can choose which companies they want to watch. 
+We have created the databases for the companies and for the watchlist so that customers can choose which companies they want to watch. When they add a company to their watchlist, it will stay there so that they have it when they come back. We also have the dummy code for the three original companies that were on our website from the previous milestone. 
 
 ## Backend technologies used
-We used Node.js and Express to help create the backend of our project. 
+We used Node.js and Express to help create the backend of our project. We also used SQlite and an API. We used the SQlite to make a database so that we could save information from the customers wishlist and notes that they made. We used the API in order to get the company information from the SEC so that the customer could look up any company that was in their system. 
 
 ## Database used
-Our two databases are called companies.db and watchlist.db. They can be found on your local computer since we made them through vs code. 
+Our two databases are called companies.db and watchlist.db. They can be found on your local computer since we made them through vs code. We have title, ticker, cik, and industry in the company.db and title, ticker, industry, and added_at in the watchlist.db. 
 
 ## Main data model/resource
 We are using SQlite within VS code. This is the one that we went over in class and since it is the one that we have the most knowledge about, we decided to use it.
 
 ## Current working backend features
-The GET, POST, and DELETE functions all work inside of the databases. We were also able to create a database in our local computers. 
+The GET, POST, and DELETE functions all work inside of the databases. We were also able to create a database in our local computers. We also have routes, models, and a db Connect so that everything can work together from back end to the front end. the routes connect to the models and the db because the routes are the middleware in between the backend and frontend.  
 
 ## Which frontend feature is currently connected to the backend/database
-The frontend feature that is currently connected to the backend/database is the watchlist button. You are able to click on it and it will save in your watchlist inside the database. 
+The frontend feature that is currently connected to the backend/database is the watchlist button. You are able to click on it and it will save in your watchlist inside the database. The watchlist on the front end is clicked, which goes into the middleware, and then it goes to your database so that it is permanently saved in there. 
 
 ## Instructions for running the application
 **Live demo:** https://ericarmijos.github.io/RiskWatch/
+
+The code only works on a local computer because that is how we learned to do it in class, so you need to download the file before it can work. 
 
 To run it locally, no install or build step is needed:
 
 1. Clone or download this repository. 
 2. Make sure to install node and express onto your computer.
-3. When everything is installed you can type in node app.js and it will start the server for you.
+3. When everything is installed you can type in node app.js and it will start the server on the computer.
 4. Open the folder in VS Code and start **Live Server** on `index.html`, or just double-click `index.html` to open it in a browser.
 5. Go to the search bar and type in a name of a company.
 6. Click on the open company and you can decide to add it to your watchlist or not. 
 
 # What your team plans to complete next
-Next we plan on building the comparing area, 
+Next we plan on building the comparing area and having the reports from multiple years. we also will make the different risks work so that you can see it on the website. We will also work on the notes area so that customers can write things down that they want to remember or keep track of. We will also make sure that we get rid of all the dummy data and that everything works together like it should. 
+
+## AI Usage
+
+**Tool used:** Claude Code (Anthropic's Claude Opus 5.5), with AI tools allowed under the course policy.
+We used Claude to help us connect the front end and the back end. We asked it for help on connecting the two since we do not have a lot of information on how to do that. It fixed the main.js so that we were able to add the companies to the watchlist. We also used it in order to help us make the website look like the dummy data because we were not able to figure out what we did wrong. We made the backend by ourselves and we tried to connect the two before using AI. When we could not figure it out, we decided to ask AI since we do not have a ton of information on it. We used it mainly for debugging and learning how to write specific code that we do not have.
+
+
+
 
 
 
