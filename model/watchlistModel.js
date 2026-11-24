@@ -1,10 +1,10 @@
 const {db2} = require("../config/dbConnect");
 
-function addToWatchlist(name, ticker, added_at){
+function addToWatchlist(title, ticker, added_at){
     db2.prepare(`
-        INSERT INTO watchlist (name, ticker, added_at)
+        INSERT INTO watchlist (title, ticker, added_at)
         VALUES (?,?,?)
-        `).run(name, ticker, added_at);
+        `).run(title, ticker, added_at);
 }
 
 function deleteFromWatchlist(ticker) {
