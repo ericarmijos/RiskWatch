@@ -4,7 +4,7 @@
 // every page has every element (e.g. only compare.html has filter buttons).
 
 // Address of the Express backend (app.js)
-const API = "http://localhost:3000";
+const API = "https://ericarmijos.github.io/RiskWatch/search.html";
 
 // ----- Mobile navigation toggle -----
 const navToggle = document.getElementById("nav-toggle");
